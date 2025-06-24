@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { render, screen, fireEvent } from '@testing-library/react'
 import App from '../App'
 
 describe('App component', () => {
@@ -21,5 +21,19 @@ describe('App component', () => {
     render(<App />)
     const buttonElement = screen.getByRole('button')
     expect(buttonElement).toHaveTextContent('count is 0')
+  })
+
+  it('increments counter on button click', () => {
+    render(<App />)
+    const buttonElement = screen.getByRole('button')
+    
+    // Verify initial count
+    expect(buttonElement).toHaveTextContent('count is 0')
+    
+    // Click the button
+    fireEvent.click(buttonElement)
+    
+    // Verify count has incremented
+    expect(buttonElement).toHaveTextContent('count is 1')
   })
 })
