@@ -2,6 +2,7 @@
 import * as stylex from '@stylexjs/stylex';
 import { Info } from "lucide-react";
 import { SalaryChart } from './SalaryChart';
+import { getExperienceLevels, type SalaryData } from '../services/dataService';
 
 const styles = stylex.create({
   container: {
@@ -107,11 +108,12 @@ interface TooltipData {
 interface ResultsDisplayProps {
   language: string;
   country: string;
+  salaryData: SalaryData;
   onTooltipChange: (data: TooltipData | null) => void;
 }
 
-export function ResultsDisplay({ language, country, onTooltipChange }: ResultsDisplayProps) {
-  const levels = ['16+ years', '11-16 years', '6-10 years', '3-5 years', '1-2 years', '<1 year'];
+export function ResultsDisplay({ language, country, salaryData, onTooltipChange }: ResultsDisplayProps) {
+  const levels = getExperienceLevels(salaryData).reverse(); // Reverse to show from highest to lowest experience
 
   return (
     <div {...stylex.props(styles.container)}>
@@ -137,6 +139,7 @@ export function ResultsDisplay({ language, country, onTooltipChange }: ResultsDi
               <SalaryChart
                 language={language}
                 country={country}
+                salaryData={salaryData}
                 onTooltipChange={onTooltipChange}
               />
             </div>

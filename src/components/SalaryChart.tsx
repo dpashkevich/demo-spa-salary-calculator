@@ -1,5 +1,6 @@
 import React from 'react';
 import * as stylex from '@stylexjs/stylex';
+import { processDataForChart, getExperienceLevels, type SalaryData } from '../services/dataService';
 
 interface TooltipData {
   country: string;
@@ -13,6 +14,7 @@ interface TooltipData {
 interface SalaryChartProps {
   language: string;
   country: string;
+  salaryData: SalaryData;
   onTooltipChange: (data: TooltipData | null) => void;
 }
 
@@ -118,60 +120,15 @@ const styles = stylex.create({
   },
 });
 
-export function SalaryChart({ language, country, onTooltipChange }: SalaryChartProps) {
-  const levels = ['16+ years', '11-16 years', '6-10 years', '3-5 years', '1-2 years', '<1 year'];
-  const salaryRanges = {
-    'JavaScript': { 
-      '<1 year': [25, 45] as [number, number], 
-      '1-2 years': [35, 60] as [number, number], 
-      '3-5 years': [50, 80] as [number, number], 
-      '6-10 years': [65, 95] as [number, number], 
-      '11-16 years': [80, 120] as [number, number], 
-      '16+ years': [100, 150] as [number, number] 
-    },
-    'Python': { 
-      '<1 year': [30, 50] as [number, number], 
-      '1-2 years': [40, 65] as [number, number], 
-      '3-5 years': [55, 85] as [number, number], 
-      '6-10 years': [70, 100] as [number, number], 
-      '11-16 years': [85, 125] as [number, number], 
-      '16+ years': [105, 155] as [number, number] 
-    },
-    'Java': { 
-      '<1 year': [35, 55] as [number, number], 
-      '1-2 years': [45, 70] as [number, number], 
-      '3-5 years': [60, 90] as [number, number], 
-      '6-10 years': [75, 105] as [number, number], 
-      '11-16 years': [90, 130] as [number, number], 
-      '16+ years': [110, 160] as [number, number] 
-    },
-    'TypeScript': { 
-      '<1 year': [28, 48] as [number, number], 
-      '1-2 years': [38, 63] as [number, number], 
-      '3-5 years': [53, 83] as [number, number], 
-      '6-10 years': [68, 98] as [number, number], 
-      '11-16 years': [83, 123] as [number, number], 
-      '16+ years': [103, 153] as [number, number] 
-    },
-    'React': { 
-      '<1 year': [30, 50] as [number, number], 
-      '1-2 years': [40, 65] as [number, number], 
-      '3-5 years': [55, 85] as [number, number], 
-      '6-10 years': [70, 100] as [number, number], 
-      '11-16 years': [85, 125] as [number, number], 
-      '16+ years': [105, 155] as [number, number] 
-    },
-    'Kotlin': { 
-      '<1 year': [28, 47] as [number, number], 
-      '1-2 years': [37, 62] as [number, number], 
-      '3-5 years': [52, 82] as [number, number], 
-      '6-10 years': [67, 97] as [number, number], 
-      '11-16 years': [82, 122] as [number, number], 
-      '16+ years': [102, 152] as [number, number] 
-    }
-  };
+export function SalaryChart({ language, country, salaryData, onTooltipChange }: SalaryChartProps) {
+  // Get dynamic data from the loaded salary data
+  const levels = getExperienceLevels(salaryData).reverse(); // Reverse to show from highest to lowest experience
+  const currentRanges = processDataForChart(salaryData, country, language);
 
-  const currentRanges = salaryRanges[language as keyof typeof salaryRanges] || salaryRanges.JavaScript;
+  // Calculate chart bounds based on actual data
+  const allSalaries = Object.values(currentRanges).flat();
+  const maxSalary = allSalaries.length > 0 ? Math.max(...allSalaries) : 200;
+  const chartMaxSalary = Math.ceil(maxSalary / 50) * 50; // Round up to nearest 50
 
   const handleCircleHover = (
     event: React.MouseEvent<HTMLDivElement>,
@@ -201,32 +158,37 @@ export function SalaryChart({ language, country, onTooltipChange }: SalaryChartP
         {/* Grid lines */}
         <div {...stylex.props(styles.gridLines)}>
           {/* Vertical lines */}
-          {[0, 107, 214, 321, 428].map((x, index) => (
+          {Array.from({ length: 5 }, (_, i) => (
             <div 
-              key={`v-${index}`} 
+              key={`v-${i}`} 
               {...stylex.props(styles.gridLine, styles.verticalLine)}
-              style={{ left: `${(x/428)*100}%` }} 
+              style={{ left: `${(i / 4) * 100}%` }} 
             />
           ))}
-          {/* Horizontal lines - adjusted for 6 levels */}
-          {[0, 64, 128, 192, 256, 320].map((y, index) => (
+          {/* Horizontal lines - dynamic based on experience levels */}
+          {Array.from({ length: levels.length + 1 }, (_, i) => (
             <div 
-              key={`h-${index}`} 
+              key={`h-${i}`} 
               {...stylex.props(styles.gridLine, styles.horizontalLine)}
-              style={{ top: `${(y/320)*100}%` }} 
+              style={{ top: `${(i / levels.length) * 100}%` }} 
             />
           ))}
         </div>
 
         {/* X-axis labels */}
         <div {...stylex.props(styles.xAxisLabels)}>
-          {[
-            { value: '$0', position: 0 },
-            { value: '$50K', position: (107/428)*100 },
-            { value: '$100K', position: (214/428)*100 },
-            { value: '$150K', position: (321/428)*100 },
-            { value: '$200K', position: 100 }
-          ].map((label, index) => (
+          {(() => {
+            const steps = 4;
+            const stepValue = chartMaxSalary / steps;
+            return Array.from({ length: steps + 1 }, (_, i) => {
+              const value = i * stepValue;
+              const position = (i / steps) * 100;
+              return {
+                value: `$${value}K`,
+                position
+              };
+            });
+          })().map((label, index) => (
             <span 
               key={index}
               {...stylex.props(styles.xAxisLabel)}
@@ -239,10 +201,16 @@ export function SalaryChart({ language, country, onTooltipChange }: SalaryChartP
 
         {/* Salary range bars - positioned to match the Y-axis labels */}
         {levels.map((level, index) => {
-          const range = currentRanges[level as keyof typeof currentRanges];
-          const leftPercent = (range[0] / 200) * 100;
-          const widthPercent = ((range[1] - range[0]) / 200) * 100;
-          const topPercent = (index / 5) * 100; // Position from top to bottom
+          const range = currentRanges[level];
+          
+          // Skip if no data available for this level
+          if (!range) {
+            return null;
+          }
+          
+          const leftPercent = (range[0] / chartMaxSalary) * 100;
+          const widthPercent = ((range[1] - range[0]) / chartMaxSalary) * 100;
+          const topPercent = (index / (levels.length - 1)) * 100; // Position from top to bottom
 
           return (
             <div 
@@ -252,7 +220,7 @@ export function SalaryChart({ language, country, onTooltipChange }: SalaryChartP
                 top: `${topPercent}%`, 
                 left: `${leftPercent}%`, 
                 width: `${widthPercent}%`,
-                height: '10%'
+                height: `${100 / levels.length}%`
               }}
             >
               {/* Range line */}

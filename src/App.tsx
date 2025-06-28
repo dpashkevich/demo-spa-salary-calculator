@@ -4,6 +4,7 @@ import { BackgroundSpiral } from './components/BackgroundSpiral';
 import { Header } from './components/Header';
 import { InputForm } from './components/InputForm';
 import { ResultsDisplay } from './components/ResultsDisplay';
+import { loadSalaryData, getAvailableCountries, getAvailableLanguages, type SalaryData } from './services/dataService';
 
 const styles = stylex.create({
   container: {
@@ -88,15 +89,48 @@ interface TooltipData {
 }
 
 export default function App() {
-  const [language, setLanguage] = useState('JavaScript');
-  const [country, setCountry] = useState('United States');
+  const [salaryData, setSalaryData] = useState<SalaryData | null>(null);
+  const [availableCountries, setAvailableCountries] = useState<string[]>([]);
+  const [availableLanguages, setAvailableLanguages] = useState<string[]>([]);
+  const [language, setLanguage] = useState('');
+  const [country, setCountry] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
   const [tooltipData, setTooltipData] = useState<TooltipData | null>(null);
   const [isTooltipVisible, setIsTooltipVisible] = useState(false);
   const [displayTooltipData, setDisplayTooltipData] = useState<TooltipData | null>(null);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const animationFrameRef = useRef<number | undefined>(undefined);
 
-  // Note: Results are always shown when language and country are set
+  // Load salary data on component mount
+  useEffect(() => {
+    async function initializeData() {
+      try {
+        setIsLoading(true);
+        const data = await loadSalaryData();
+        setSalaryData(data);
+        
+        const countries = getAvailableCountries(data);
+        const languages = getAvailableLanguages(data);
+        
+        setAvailableCountries(countries);
+        setAvailableLanguages(languages);
+        
+        // Set default values to first available options
+        if (countries.length > 0 && !country) {
+          setCountry(countries[0]);
+        }
+        if (languages.length > 0 && !language) {
+          setLanguage(languages[0]);
+        }
+      } catch (error) {
+        console.error('Failed to load salary data:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    
+    initializeData();
+  }, []);
 
   // Handle tooltip state changes with proper fade in/out
   useEffect(() => {
@@ -151,16 +185,22 @@ export default function App() {
           <InputForm
             language={language}
             country={country}
+            availableLanguages={availableLanguages}
+            availableCountries={availableCountries}
+            isLoading={isLoading}
             onLanguageChange={setLanguage}
             onCountryChange={setCountry}
           />
 
           {/* Step 2: Results Section */}
-          <ResultsDisplay
-            language={language}
-            country={country}
-            onTooltipChange={setTooltipData}
-          />
+          {!isLoading && salaryData && language && country && (
+            <ResultsDisplay
+              language={language}
+              country={country}
+              salaryData={salaryData}
+              onTooltipChange={setTooltipData}
+            />
+          )}
         </div>
       </div>
 

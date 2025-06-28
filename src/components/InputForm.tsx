@@ -52,6 +52,9 @@ const styles = stylex.create({
 interface InputFormProps {
   language: string;
   country: string;
+  availableLanguages: string[];
+  availableCountries: string[];
+  isLoading: boolean;
   onLanguageChange: (value: string) => void;
   onCountryChange: (value: string) => void;
 }
@@ -59,11 +62,12 @@ interface InputFormProps {
 export function InputForm({
   language,
   country,
+  availableLanguages,
+  availableCountries,
+  isLoading,
   onLanguageChange,
   onCountryChange
 }: InputFormProps) {
-  const programmingLanguages = ['JavaScript', 'Python', 'Java', 'TypeScript', 'React', 'Kotlin', 'C++', 'C#', 'Go', 'Ruby'];
-  const countries = ['United States', 'Canada', 'United Kingdom', 'Germany', 'Australia', 'Netherlands', 'Sweden', 'France'];
 
   return (
     <div {...stylex.props(styles.container)}>
@@ -79,12 +83,12 @@ export function InputForm({
       <div {...stylex.props(styles.form)}>
         <div {...stylex.props(styles.fieldContainer)}>
           <Label htmlFor="language" {...stylex.props(styles.label)}>Programming language</Label>
-          <Select value={language} onValueChange={onLanguageChange}>
+          <Select value={language} onValueChange={onLanguageChange} disabled={isLoading}>
             <SelectTrigger {...stylex.props(styles.select)}>
-              <SelectValue placeholder="Select language" />
+              <SelectValue placeholder={isLoading ? "Loading..." : "Select language"} />
             </SelectTrigger>
             <SelectContent>
-              {programmingLanguages.map((lang) => (
+              {availableLanguages.map((lang) => (
                 <SelectItem key={lang} value={lang}>{lang}</SelectItem>
               ))}
             </SelectContent>
@@ -93,12 +97,12 @@ export function InputForm({
         
         <div {...stylex.props(styles.fieldContainer)}>
           <Label htmlFor="country" {...stylex.props(styles.label)}>Country</Label>
-          <Select value={country} onValueChange={onCountryChange}>
+          <Select value={country} onValueChange={onCountryChange} disabled={isLoading}>
             <SelectTrigger {...stylex.props(styles.select)}>
-              <SelectValue placeholder="Select country" />
+              <SelectValue placeholder={isLoading ? "Loading..." : "Select country"} />
             </SelectTrigger>
             <SelectContent>
-              {countries.map((ctry) => (
+              {availableCountries.map((ctry) => (
                 <SelectItem key={ctry} value={ctry}>{ctry}</SelectItem>
               ))}
             </SelectContent>
