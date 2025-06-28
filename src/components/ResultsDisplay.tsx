@@ -54,6 +54,7 @@ const styles = stylex.create({
   },
   labelsContainer: {
     height: '320px',
+    minWidth: '50px',
     position: 'relative',
     paddingTop: '0.5rem',
     paddingBottom: '0.5rem',
