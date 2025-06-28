@@ -1,69 +1,52 @@
-# React + TypeScript + Vite
+This is a demo project aimed to evaluate the code generation capabilities of modern AI-powered editors. The project attemps to copy the JetBrains IT Salary Calculator page available at https://www.jetbrains.com/lp/devecosystem-it-salary-calculator/
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+# IT Salary Calculator
 
-Currently, two official plugins are available:
+A modern, open-source web application for estimating software developer salaries based on programming language, country, and experience level. Powered by React, TypeScript, and Vite, this tool leverages real survey data from over 30,000 developers across 180+ countries to provide up-to-date salary insights for the tech industry.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Features
 
-## Expanding the ESLint configuration
+- Instantly estimate net salary distributions by country, language, and experience
+- Interactive charts and dynamic selection of parameters
+- Data sourced from large-scale developer surveys
+- Fast, responsive SPA built with React 19, TypeScript, and Vite
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## Getting Started
 
-```js
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+### Prerequisites
 
-      // Remove tseslint.configs.recommended and replace with this
-      ...tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      ...tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      ...tseslint.configs.stylisticTypeChecked,
+- Node.js (v18 or newer recommended)
+- npm (v9 or newer)
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+### Installation
+
+1. **Clone the repository:**
+   ```sh
+   git clone https://github.com/dpashkevich/demo-spa-salary-calculator.git
+   cd demo-spa-salary-calculator
+   ```
+2. **Install dependencies:**
+   ```sh
+   npm install
+   ```
+3. **Start the development server:**
+   ```sh
+   npm run dev
+   ```
+   The app will be available at [http://localhost:5173](http://localhost:5173) by default.
+
+### Build for Production
+
+```sh
+npm run build
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+### Run Tests
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```sh
+npm test
 ```
+
+## License
+
+This project is open-sourced under the MIT License.
