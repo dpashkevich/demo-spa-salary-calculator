@@ -1,5 +1,5 @@
 import SalaryCalculatorPage from "./SalaryCalculatorPage";
-import SpiralHeroBG from "./components/SpiralHeroBG";
+import SpiritalBackground from "./components/SpiritalBackground";
 
 function App() {
   return (
@@ -11,7 +11,7 @@ function App() {
         overflow: "hidden",
       }}
     >
-      <SpiralHeroBG />
+      <SpiritalBackground />
       <div style={{ position: "relative", zIndex: 1 }}>
         <SalaryCalculatorPage />
       </div>

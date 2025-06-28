@@ -1,55 +1,16 @@
 import * as stylex from "@stylexjs/stylex";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import Select from "./components/Select";
 import SalaryChart from "./components/SalaryChart";
-import type { SalaryLevel } from "./components/SalaryChart";
-import SpiralHeroBG from "./components/SpiralHeroBG";
 
-const LANGUAGE_OPTIONS = [
-  { value: "", label: "Select language" },
-  { value: "kotlin", label: "Kotlin" },
-  { value: "javascript", label: "JavaScript" },
-  { value: "python", label: "Python" },
-  { value: "java", label: "Java" },
-  { value: "csharp", label: "C#" },
-  { value: "go", label: "Go" },
-  { value: "typescript", label: "TypeScript" },
-];
-
-const COUNTRY_OPTIONS = [
-  { value: "", label: "Select country" },
-  { value: "australia", label: "Australia" },
-  { value: "usa", label: "USA" },
-  { value: "germany", label: "Germany" },
-];
-
-function getMockSalaryDistribution(
-  language: string,
-  country: string
-): SalaryLevel[] {
-  // Simple mock: base salary by country, multiplier by language
-  const baseByCountry: Record<string, number> = {
-    australia: 60000,
-    usa: 70000,
-    germany: 55000,
-  };
-  const multiplierByLanguage: Record<string, number> = {
-    kotlin: 1.1,
-    javascript: 1.0,
-    python: 1.05,
-    java: 1.0,
-    csharp: 0.95,
-    go: 1.15,
-    typescript: 1.05,
-  };
-  const base = baseByCountry[country] || 50000;
-  const mult = multiplierByLanguage[language] || 1.0;
-  // Simulate levels from L7 (senior) to L1 (junior)
-  return [7, 6, 5, 4, 3, 2, 1].map((lvl) => ({
-    level: `L${lvl}`,
-    salary: Math.round(base * mult * (0.5 + lvl * 0.1)),
-  }));
-}
+// Dynamic options
+const getCountryOptions = (data: CalculatorData | null) => {
+  if (!data) return [{ value: "", label: "Select country" }];
+  return [
+    { value: "", label: "Select country" },
+    ...Object.keys(data).map((country) => ({ value: country, label: country })),
+  ];
+};
 
 function InfoNote() {
   return (
@@ -63,29 +24,110 @@ function InfoNote() {
   );
 }
 
+type CalculatorEntry = {
+  value: number;
+  category: string;
+  metadata: Record<string, string>;
+};
+
+type CalculatorData = {
+  [country: string]: {
+    [language: string]: {
+      entries: CalculatorEntry[];
+    };
+  };
+};
+
 export default function SalaryCalculatorPage() {
   const [language, setLanguage] = useState("");
   const [country, setCountry] = useState("");
+  const [data, setData] = useState<CalculatorData | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const chartData = useMemo(() => {
-    if (language && country) {
-      return getMockSalaryDistribution(language, country);
+  // Dynamic options
+  const countryOptions = getCountryOptions(data);
+
+  useEffect(() => {
+    setLoading(true);
+    setError(null);
+    fetch("/calculatorData.json")
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to load data");
+        return res.json();
+      })
+      .then((json) => {
+        setData(json);
+        setLoading(false);
+      })
+      .catch((e) => {
+        setError(e.message);
+        setLoading(false);
+      });
+  }, []);
+
+  // Select first available country and language on data load
+  useEffect(() => {
+    if (data) {
+      const countryList = Object.keys(data);
+      if (!country && countryList.length > 0) {
+        setCountry(countryList[0]);
+      }
     }
-    return undefined;
-  }, [language, country]);
+  }, [data, country]);
+
+  useEffect(() => {
+    if (data && country) {
+      const langList = Object.keys(data[country] || {});
+      if (!language && langList.length > 0) {
+        setLanguage(langList[0]);
+      }
+    }
+  }, [data, country, language]);
+
+  // Gather all unique languages from all countries
+  const allLanguages = useMemo(() => {
+    if (!data) return [];
+    const langSet = new Set<string>();
+    Object.values(data).forEach((countryObj) => {
+      Object.keys(countryObj).forEach((lang) => langSet.add(lang));
+    });
+    return Array.from(langSet).sort();
+  }, [data]);
+
+  // Dynamic language options
+  const languageOptionsDynamic = [
+    { value: "", label: "Select language" },
+    ...allLanguages.map((lang) => ({ value: lang, label: lang })),
+  ];
+
+  // Chart data and dynamic Y labels (experience categories)
+  const chartData = useMemo(() => {
+    if (!data || !language || !country) return undefined;
+    const entries = data[country]?.[language]?.entries;
+    if (!entries || !Array.isArray(entries)) return undefined;
+    // Group by experience/category, pick the highest value per category
+    const expMap = new Map<string, number>();
+    entries.forEach((e) => {
+      if (!expMap.has(e.category) || e.value > (expMap.get(e.category) ?? 0)) {
+        expMap.set(e.category, e.value);
+      }
+    });
+    // Sort by value ascending (junior to senior)
+    const sorted = Array.from(expMap.entries()).sort((a, b) => a[1] - b[1]);
+    return sorted.map(([category, value]) => ({
+      category,
+      salary: value * 1000, // Assuming value is in K
+    }));
+  }, [data, language, country]);
 
   // Demo values for summary text
-  const summaryLang = language
-    ? LANGUAGE_OPTIONS.find((l) => l.value === language)?.label
-    : "Kotlin";
-  const summaryCountry = country
-    ? COUNTRY_OPTIONS.find((c) => c.value === country)?.label
-    : "Australia";
-  const summaryExp = "less than 1 year";
+  const summaryLang = language || "-";
+  const summaryCountry = country || "-";
+  const summaryExp = "all experience levels";
 
   return (
     <div {...stylex.props(styles.root)}>
-      <SpiralHeroBG />
       <div {...stylex.props(styles.heroWrap)}>
         <h1 {...stylex.props(styles.heroTitle)}>
           IT Salary
@@ -124,7 +166,7 @@ export default function SalaryCalculatorPage() {
             <Select
               value={language}
               onChange={(e) => setLanguage(e.target.value)}
-              options={LANGUAGE_OPTIONS}
+              options={languageOptionsDynamic}
               placeholder="Select language"
               id="language-select"
             />
@@ -137,7 +179,7 @@ export default function SalaryCalculatorPage() {
             <Select
               value={country}
               onChange={(e) => setCountry(e.target.value)}
-              options={COUNTRY_OPTIONS}
+              options={countryOptions}
               placeholder="Select country"
               id="country-select"
             />
@@ -150,30 +192,46 @@ export default function SalaryCalculatorPage() {
           </div>
           <div {...stylex.props(styles.chartCardWrap)}>
             <div {...stylex.props(styles.chartCard)}>
-              <div {...stylex.props(styles.summaryText)}>
-                Most{" "}
-                <span {...stylex.props(styles.summaryLang)}>{summaryLang}</span>{" "}
-                developers with{" "}
-                <span {...stylex.props(styles.summaryExp)}>{summaryExp}</span>{" "}
-                of professional experience in{" "}
-                <span {...stylex.props(styles.summaryCountry)}>
-                  {summaryCountry}
-                </span>{" "}
-                can expect the following net salary distribution (excluding any
-                bonuses):
-              </div>
-              <div {...stylex.props(styles.chartWrap)}>
-                <SalaryChart data={chartData} />
-              </div>
-              <div {...stylex.props(styles.chartLegend)}>
-                The graph shows salary distribution among users of the selected
-                technology in the specified region, based on responses from{" "}
-                <a href="#" {...stylex.props(styles.heroLink)}>
-                  Developer Ecosystem Survey 2024
-                </a>
-                .
-              </div>
-              <InfoNote />
+              {loading && <div>Loading data...</div>}
+              {error && <div style={{ color: "#ff4d4f" }}>Error: {error}</div>}
+              {!loading && !error && (
+                <>
+                  <div {...stylex.props(styles.summaryText)}>
+                    Most{" "}
+                    <span {...stylex.props(styles.summaryLang)}>
+                      {summaryLang}
+                    </span>{" "}
+                    developers with{" "}
+                    <span {...stylex.props(styles.summaryExp)}>
+                      {summaryExp}
+                    </span>{" "}
+                    of professional experience in{" "}
+                    <span {...stylex.props(styles.summaryCountry)}>
+                      {summaryCountry}
+                    </span>{" "}
+                    can expect the following net salary distribution (excluding
+                    any bonuses):
+                  </div>
+                  <div {...stylex.props(styles.chartWrap)}>
+                    <SalaryChart
+                      data={chartData}
+                      yKey="category"
+                      xKey="salary"
+                      xLabel="Salary"
+                    />
+                  </div>
+                  <div {...stylex.props(styles.chartLegend)}>
+                    The graph shows salary distribution among users of the
+                    selected technology in the specified region, based on
+                    responses from{" "}
+                    <a href="#" {...stylex.props(styles.heroLink)}>
+                      Developer Ecosystem Survey 2024
+                    </a>
+                    .
+                  </div>
+                  <InfoNote />
+                </>
+              )}
             </div>
           </div>
         </div>

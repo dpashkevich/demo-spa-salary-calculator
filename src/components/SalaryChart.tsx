@@ -15,7 +15,7 @@ export interface SalaryLevel {
   salary: number;
 }
 
-const defaultData: SalaryLevel[] = [
+const defaultData: Record<string, unknown>[] = [
   { level: "L7", salary: 95000 },
   { level: "L6", salary: 80000 },
   { level: "L5", salary: 65000 },
@@ -26,17 +26,26 @@ const defaultData: SalaryLevel[] = [
 ];
 
 interface SalaryChartProps {
-  data?: SalaryLevel[];
+  data?: Record<string, unknown>[];
+  xKey?: string;
+  yKey?: string;
+  xLabel?: string;
 }
 
-export default function SalaryChart({ data = defaultData }: SalaryChartProps) {
-  // Map levels to y-index for plotting
-  const levels = data.map((d) => d.level);
+export default function SalaryChart({
+  data = defaultData,
+  xKey = "salary",
+  yKey = "level",
+  xLabel = "Salary",
+}: SalaryChartProps) {
+  if (!data || data.length === 0) {
+    return <div {...stylex.props(styles.container)}>No data available</div>;
+  }
   const plotData = data.map((d, i) => ({
     y: i,
-    x: d.salary,
-    level: d.level,
-    salary: d.salary,
+    x: d[xKey],
+    yLabel: d[yKey],
+    ...d,
   }));
   return (
     <div {...stylex.props(styles.container)}>
@@ -46,7 +55,7 @@ export default function SalaryChart({ data = defaultData }: SalaryChartProps) {
           <XAxis
             type="number"
             dataKey="x"
-            domain={[0, 100000]}
+            name={xLabel}
             tickFormatter={(v) => `$${v / 1000}K`}
             axisLine={false}
             tickLine={false}
@@ -54,22 +63,21 @@ export default function SalaryChart({ data = defaultData }: SalaryChartProps) {
             fontSize={14}
           />
           <YAxis
-            type="number"
-            dataKey="y"
-            domain={[0, levels.length - 1]}
-            ticks={plotData.map((d) => d.y)}
-            tickFormatter={(y) => levels[y]}
+            type="category"
+            dataKey="yLabel"
+            ticks={plotData.map((d) => String(d.yLabel))}
+            tickFormatter={(y) => String(y)}
             axisLine={false}
             tickLine={false}
             stroke="#888"
             fontSize={14}
-            width={40}
+            width={80}
           />
-          {/* Horizontal lines for each level */}
+          {/* Horizontal lines for each y value */}
           {plotData.map((d) => (
             <ReferenceLine
-              key={d.level}
-              y={d.y}
+              key={String(d.yLabel)}
+              y={String(d.yLabel)}
               stroke="#ecebfa"
               strokeDasharray="2 2"
               ifOverflow="extendDomain"
@@ -77,8 +85,10 @@ export default function SalaryChart({ data = defaultData }: SalaryChartProps) {
           ))}
           <Tooltip
             cursor={{ stroke: "#b18cff", strokeWidth: 2 }}
-            formatter={(v) => `$${v.toLocaleString()}`}
-            labelFormatter={(_, p) => p && p[0] && levels[p[0].payload.y]}
+            formatter={(v, name) =>
+              name === xKey ? `$${v.toLocaleString()}` : v
+            }
+            labelFormatter={(label) => `${label}`}
           />
           <Scatter
             data={plotData}
