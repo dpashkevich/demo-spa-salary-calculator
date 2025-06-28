@@ -1,3 +1,5 @@
+This is a demo project aimed to evaluate the code generation capabilities of modern AI-powered editors. The project attemps to copy the JetBrains IT Salary Calculator page available at https://www.jetbrains.com/lp/devecosystem-it-salary-calculator/
+
 # Demo SPA Salary Calculator
 
 A modern, interactive salary calculator built as a Single Page Application (SPA) that provides salary insights by programming language and country. Features beautiful data visualizations and an intuitive user interface.
