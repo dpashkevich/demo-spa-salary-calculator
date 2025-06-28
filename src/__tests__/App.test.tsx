@@ -1,39 +1,39 @@
 import { describe, it, expect } from 'vitest'
-import { render, screen, fireEvent } from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
 import App from '../App'
 
 describe('App component', () => {
   it('renders the main heading', () => {
     render(<App />)
-    expect(screen.getByText('Vite + React')).toBeInTheDocument()
+    // Use getByRole for heading elements
+    expect(screen.getByRole('heading', { name: /IT Salary Calculator/i })).toBeInTheDocument()
   })
 
-  it('displays the logos', () => {
+  it('displays the step 1 section', () => {
     render(<App />)
-    const viteLogoElement = screen.getByAltText('Vite logo')
-    const reactLogoElement = screen.getByAltText('React logo')
-    
-    expect(viteLogoElement).toBeInTheDocument()
-    expect(reactLogoElement).toBeInTheDocument()
+    // Look for the step number "1" as a heading
+    expect(screen.getByRole('heading', { name: '1' })).toBeInTheDocument()
+    expect(screen.getByText('Enter your programming language and country.')).toBeInTheDocument()
   })
 
-  it('displays the counter button', () => {
+  it('displays programming language selector', () => {
     render(<App />)
-    const buttonElement = screen.getByRole('button')
-    expect(buttonElement).toHaveTextContent('count is 0')
+    expect(screen.getByText('Programming language')).toBeInTheDocument()
+    // Look for combobox without specific name
+    const comboboxes = screen.getAllByRole('combobox')
+    expect(comboboxes).toHaveLength(2) // Should have 2 comboboxes (language and country)
   })
 
-  it('increments counter on button click', () => {
+  it('displays country selector', () => {
     render(<App />)
-    const buttonElement = screen.getByRole('button')
-    
-    // Verify initial count
-    expect(buttonElement).toHaveTextContent('count is 0')
-    
-    // Click the button
-    fireEvent.click(buttonElement)
-    
-    // Verify count has incremented
-    expect(buttonElement).toHaveTextContent('count is 1')
+    expect(screen.getByText('Country')).toBeInTheDocument()
+    // Look for combobox without specific name
+    const comboboxes = screen.getAllByRole('combobox')
+    expect(comboboxes).toHaveLength(2) // Should have 2 comboboxes (language and country)
+  })
+
+  it('displays the description text', () => {
+    render(<App />)
+    expect(screen.getByText(/Each year, our extensive surveys reach out to over 30,000 developers/)).toBeInTheDocument()
   })
 })
