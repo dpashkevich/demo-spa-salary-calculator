@@ -4,7 +4,7 @@ import App from '../App'
 
 // Mock the dataService module
 vi.mock('../services/dataService', () => ({
-  loadSalaryData: vi.fn(() => 
+  loadSalaryData: vi.fn(() =>
     Promise.resolve({
       'United States': {
         'JavaScript / TypeScript': {
@@ -26,7 +26,7 @@ describe('App component', () => {
     await act(async () => {
       render(<App />)
     })
-    
+
     // Use getByRole for heading elements
     expect(screen.getByRole('heading', { name: /IT Salary Calculator/i })).toBeInTheDocument()
   })
@@ -35,7 +35,7 @@ describe('App component', () => {
     await act(async () => {
       render(<App />)
     })
-    
+
     // Look for the step number "1" as a heading
     expect(screen.getByRole('heading', { name: '1' })).toBeInTheDocument()
     expect(screen.getByText('Enter your programming language and country.')).toBeInTheDocument()
@@ -45,7 +45,7 @@ describe('App component', () => {
     await act(async () => {
       render(<App />)
     })
-    
+
     await waitFor(() => {
       expect(screen.getByText('Programming language')).toBeInTheDocument()
     })
@@ -55,7 +55,7 @@ describe('App component', () => {
     await act(async () => {
       render(<App />)
     })
-    
+
     await waitFor(() => {
       expect(screen.getByText('Country')).toBeInTheDocument()
     })
@@ -65,7 +65,7 @@ describe('App component', () => {
     await act(async () => {
       render(<App />)
     })
-    
+
     expect(screen.getByText(/Each year, our extensive surveys reach out to over 30,000 developers/)).toBeInTheDocument()
   })
 })

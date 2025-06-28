@@ -56,7 +56,7 @@ const styles = stylex.create({
   xAxisLabel: {
     position: 'absolute',
     fontSize: '13px',
-    color: 'rgba(255, 255, 255, 0.7)',
+    color: 'rgba(25, 25, 28, 0.7)',
     transform: 'translateX(-50%)',
   },
   rangeContainer: {
